@@ -50,6 +50,7 @@ public class UsersController : BaseController
             return BadRequest(validationResult.Errors);
 
         var command = _mapper.Map<CreateUserCommand>(request);
+        
         var response = await _mediator.Send(command, cancellationToken);
 
         return Created(string.Empty, new ApiResponseWithData<CreateUserResponse>
