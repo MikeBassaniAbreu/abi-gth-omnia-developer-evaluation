@@ -5,8 +5,10 @@ using Ambev.DeveloperEvaluation.Common.Security;
 using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.IoC;
 using Ambev.DeveloperEvaluation.ORM;
+using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Middleware;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -23,7 +25,41 @@ public class Program
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
             builder.AddDefaultLogging();
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers(options =>
+            {
+                // Opcional, mas boa prática para consistência:
+                options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+                options.SuppressAsyncSuffixInActionNames = false; // Garante que sufixos 'Async' não afetem rotas
+            }).ConfigureApiBehaviorOptions(options => // <-- Mudei a configuração para .ConfigureApiBehaviorOptions
+            {
+                // Esta é a parte mais provável de resolver o seu problema:
+                // Desabilita o filtro automático de BadRequest para ModelState inválido.
+                // Agora, a propriedade SuppressModelStateInvalidFilter está no local correto.
+                options.SuppressModelStateInvalidFilter = true;
+
+                // Aqui estamos customizando a resposta para erros de Model Binding
+                // que ocorrem ANTES da sua lógica de controller ou MediatR.
+                // Isso garante que mesmo esses erros sejam formatados usando seu ApiResponse.
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    var errors = context.ModelState.Where(m => m.Value != null && m.Value.Errors.Any())
+                                                   .SelectMany(m => m.Value.Errors)
+                                                   .Select(e => new ValidationErrorDetail // Certifique-se de que ValidationErrorDetail está visível (usings)
+                                                   {
+                                                       Error = "ModelBinding", // Código de erro customizado
+                                                       Detail = e.ErrorMessage
+                                                   }).ToList();
+
+                    // Retorna um BadRequestObjectResult que encapsula seu ApiResponse.
+                    return new BadRequestObjectResult(new ApiResponse // Certifique-se de que ApiResponse está visível (usings)
+                    {
+                        Success = false,
+                        Message = "Model binding failed.",
+                        Errors = errors
+                    });
+                };
+            });
+
             builder.Services.AddEndpointsApiExplorer();
 
             builder.AddBasicHealthChecks();
