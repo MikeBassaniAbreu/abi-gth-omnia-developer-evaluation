@@ -1,4 +1,6 @@
-﻿using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
+﻿using Ambev.DeveloperEvaluation.Application.Sales.CancelSale;
+using Ambev.DeveloperEvaluation.Application.Sales.CancelSaleItem;
+using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetAllSales;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSaleDetails;
 using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
@@ -23,11 +25,14 @@ public class SalesController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly IMapper _mapper;
+    private readonly ILogger<SalesController> _logger; 
 
-    public SalesController(IMediator mediator, IMapper mapper)
+
+    public SalesController(IMediator mediator, IMapper mapper, ILogger<SalesController> logger)
     {
         _mediator = mediator;
         _mapper = mapper;
+        _logger = logger;
     }
 
     /// <summary>
@@ -164,5 +169,89 @@ public class SalesController : BaseController
         }
     }
 
+    /// <summary>
+    /// Cancels a sale (soft delete) by its unique ID.
+    /// </summary>
+    /// <param name="id">The unique identifier of the sale to cancel.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A confirmation of cancellation.</returns>
+    [HttpDelete("{id}")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> CancelSale([FromRoute] Guid id, CancellationToken cancellationToken)
+    {
+        var command = new CancelSaleCommand(id);
+
+        try
+        {
+            await _mediator.Send(command, cancellationToken);
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = $"Sale with ID {id} cancelled successfully."
+            });
+        }
+        catch (Domain.Exceptions.DomainException ex)
+        {
+            if (ex.Message.Contains("not found"))
+            {
+                return NotFound(new ApiResponse { Success = false, Message = ex.Message });
+            }
+            return BadRequest(new ApiResponse { Success = false, Message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            
+            _logger.LogError(ex, "An unexpected error occurred while cancelling sale {SaleId}.", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { Success = false, Message = "An unexpected error occurred." });
+        }
+    }
+
+    /// <summary>
+    /// Cancels a specific item within a sale (soft delete).
+    /// </summary>
+    /// <param name="saleId">The unique identifier of the sale.</param>
+    /// <param name="itemId">The unique identifier of the item to cancel.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A confirmation of item cancellation.</returns>
+    [HttpDelete("{saleId}/items/{itemId}")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> CancelSaleItem(
+        [FromRoute] Guid saleId,
+        [FromRoute] Guid itemId,
+        CancellationToken cancellationToken)
+    {
+        var command = new CancelSaleItemCommand(saleId, itemId);
+
+        try
+        {
+            await _mediator.Send(command, cancellationToken);
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = $"Sale item with ID {itemId} successfully cancelled in sale {saleId}."
+            });
+        }
+        catch (Domain.Exceptions.DomainException ex)
+        {
+            if (ex.Message.Contains("not found") || ex.Message.Contains("in this sale"))
+            {
+                return NotFound(new ApiResponse { Success = false, Message = ex.Message });
+            }
+            return BadRequest(new ApiResponse { Success = false, Message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An unexpected error occurred while cancelling item {ItemId} in sale {SaleId}.", itemId, saleId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { Success = false, Message = "An unexpected error occurred." });
+        }
+    }
 
 }

@@ -111,7 +111,24 @@ public class Sale : BaseEntity
         UpdateLastModified();
     }
 
-   
+    public void CancelItem(Guid itemId)
+    {
+        if (IsCancelled)
+            throw new DomainException("Cannot cancel an item in a cancelled sale.");
+
+        var itemToCancel = _items.FirstOrDefault(i => i.Id == itemId);
+        if (itemToCancel == null)
+            throw new DomainException($"Sale item with ID {itemId} not found in this sale.");
+
+        
+        itemToCancel.Cancel();
+        
+        CalculateTotalAmount();
+
+        UpdateLastModified(); 
+    }
+
+
     private new void UpdateLastModified()
     {
         base.UpdateLastModified(); 
