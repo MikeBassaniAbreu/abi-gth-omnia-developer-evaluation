@@ -13,8 +13,13 @@ public abstract class BaseEntity : IComparable<BaseEntity>
     protected BaseEntity()
     {
         Id = Guid.NewGuid(); 
-        CreatedAt = DateTime.UtcNow; 
-        
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    protected void UpdateLastModified()
+    {
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public Task<IEnumerable<ValidationErrorDetail>> ValidateAsync()

@@ -50,6 +50,30 @@ public class Sale : BaseEntity
 
     private Sale() { }
 
+    public void UpdateSaleDetails(Guid customerId, string customerName, Guid branchId, string branchName, DateTime saleDate)
+    {
+        if (customerId == Guid.Empty)
+            throw new DomainException("Customer ID cannot be empty.");
+        if (string.IsNullOrWhiteSpace(customerName))
+            throw new DomainException("Customer name cannot be null or empty.");
+        if (branchId == Guid.Empty)
+            throw new DomainException("Branch ID cannot be empty.");
+        if (string.IsNullOrWhiteSpace(branchName))
+            throw new DomainException("Branch name cannot be null or empty.");
+        if (saleDate == default)
+            throw new DomainException("Sale date cannot be default.");
+        if (saleDate > DateTime.UtcNow)
+            throw new DomainException("Sale date cannot be in the future.");
+
+        CustomerId = customerId;
+        CustomerName = customerName;
+        BranchId = branchId;
+        BranchName = branchName;
+        SaleDate = saleDate;
+
+        UpdateLastModified(); 
+    }
+
     public void AddItem(SaleItem item)
     {
         if (item == null)
@@ -88,7 +112,8 @@ public class Sale : BaseEntity
     }
 
    
-    private void UpdateLastModified()
+    private new void UpdateLastModified()
     {
+        base.UpdateLastModified(); 
     }
 }

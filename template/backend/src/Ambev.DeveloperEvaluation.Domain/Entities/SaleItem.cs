@@ -39,7 +39,28 @@ public class SaleItem : BaseEntity
         CalculateTotalItemAmount(); 
     }
 
-   
+    public SaleItem(Guid saleId, Guid productId, string productName, int quantity, decimal unitPrice, decimal discount)
+    {
+        if (saleId == Guid.Empty)
+            throw new DomainException("Sale ID cannot be empty.");
+        if (productId == Guid.Empty)
+            throw new DomainException("Product ID cannot be empty.");
+        if (string.IsNullOrWhiteSpace(productName))
+            throw new DomainException("Product name cannot be null or empty.");
+        if (unitPrice <= 0)
+            throw new DomainException("Unit price must be greater than zero.");
+
+        SaleId = saleId;
+        ProductId = productId;
+        ProductName = productName;
+        Quantity = quantity;
+        UnitPrice = unitPrice;
+        Discount = discount; 
+        TotalItemAmount = (UnitPrice * Quantity) - Discount;
+        IsCancelled = false;
+        UpdateLastModified();
+    }
+
     private SaleItem() { }
 
     
@@ -62,6 +83,24 @@ public class SaleItem : BaseEntity
         ApplyDiscount(); 
         CalculateTotalItemAmount(); 
        
+    }
+
+    
+    public void UpdateItemDetails(Guid productId, string productName, int quantity, decimal unitPrice, decimal discount)
+    {
+        if (productId == Guid.Empty)
+            throw new DomainException("Product ID cannot be empty.");
+        if (string.IsNullOrWhiteSpace(productName))
+            throw new DomainException("Product name cannot be null or empty.");
+        if (unitPrice <= 0)
+            throw new DomainException("Unit price must be greater than zero.");
+        
+        ProductId = productId;
+        ProductName = productName;
+        UnitPrice = unitPrice;
+        
+        UpdateQuantity(quantity);        
+        UpdateLastModified(); 
     }
 
     private void ApplyDiscount()
@@ -90,5 +129,11 @@ public class SaleItem : BaseEntity
             throw new DomainException("Sale item is already cancelled.");
 
         IsCancelled = true;
+    }
+
+   
+    private new void UpdateLastModified() 
+    {
+        base.UpdateLastModified();
     }
 }

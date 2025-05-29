@@ -1,9 +1,11 @@
 ﻿using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetAllSales;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSaleDetails;
+using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
+using Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
 using AutoMapper;
 using FluentValidation.Results; 
 using MediatR;
@@ -69,21 +71,15 @@ public class SalesController : BaseController
     /// <summary>
     /// Retrieves a list of all sales.
     /// </summary>
-    /// <returns>A list of sales.</returns>
-    /// <response code="200">Returns the list of sales.</response>
-    /// <response code="500">If an unhandled error occurs.</response>
-    [HttpGet] // Define este método como um endpoint HTTP GET
+    /// <returns>A list of sales.</returns
+    [HttpGet] 
     [ProducesResponseType(typeof(IEnumerable<GetAllSalesQueryResult>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetAllSales()
-    {
-        // Cria uma nova instância da query para obter todas as vendas
+    {        
         var query = new GetAllSalesQuery();
-
-        // Envia a query para o MediatR e aguarda o resultado
         var result = await _mediator.Send(query);
 
-        // Retorna um OK (200) com a lista de vendas
         return Ok(result);
     }
 
@@ -92,29 +88,80 @@ public class SalesController : BaseController
     /// </summary>
     /// <param name="id">The unique identifier of the sale.</param>
     /// <returns>The requested sale.</returns>
-    /// <response code="200">Returns the requested sale.</response>
-    /// <response code="404">If the sale is not found.</response>
-    /// <response code="500">If an unhandled error occurs.</response>
-    [HttpGet("{id}")] // Define este método como um endpoint HTTP GET com um parâmetro de rota 'id'
+    [HttpGet("{id}")] 
     [ProducesResponseType(typeof(GetSaleDetailsQueryResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetSaleById([FromRoute] Guid id) // [FromRoute] é opcional, mas boa prática para clareza
+    public async Task<IActionResult> GetSaleById([FromRoute] Guid id)
     {
-        // Cria uma nova instância da query com o ID recebido da rota
+        
         var query = new GetSaleDetailsQuery(id);
 
-        // Envia a query para o MediatR e aguarda o resultado
         var result = await _mediator.Send(query);
 
-        // Se o resultado for null (venda não encontrada), retorna 404 Not Found
         if (result == null)
         {
             return NotFound($"Sale with ID {id} not found.");
         }
 
-        // Retorna um OK (200) com os detalhes da venda
         return Ok(result);
+    }
+
+
+    /// <summary>
+    /// Updates an existing sale.
+    /// </summary>
+    /// <param name="id">The unique identifier of the sale to update.</param>
+    /// <param name="request">The sale update request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The ID of the updated sale if successful.</returns>    ///    
+    [HttpPut("{id}")] 
+    [ProducesResponseType(typeof(ApiResponseWithData<UpdateSaleResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateSale([FromRoute] Guid id, [FromBody] UpdateSaleRequest request, CancellationToken cancellationToken)
+    {
+        
+        var validator = new UpdateSaleRequestValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            var errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList();
+            return BadRequest(new ApiResponse { Success = false, Message = "Validation failed.", Errors = errors });
+        }
+
+       
+        var command = _mapper.Map<UpdateSaleCommand>(request);
+        command.Id = id; 
+
+        try
+        {
+            
+            await _mediator.Send(command, cancellationToken);
+
+            
+            return Ok(new ApiResponseWithData<UpdateSaleResponse>
+            {
+                Success = true,
+                Message = "Sale updated successfully.",
+                Data = new UpdateSaleResponse { Id = id }
+            });
+        }
+        catch (Domain.Exceptions.DomainException ex)
+        {
+            
+            if (ex.Message.Contains("not found")) 
+            {
+                return NotFound(new ApiResponse { Success = false, Message = ex.Message });
+            }
+            return BadRequest(new ApiResponse { Success = false, Message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            
+            return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { Success = false, Message = "An unexpected error occurred." });
+        }
     }
 
 
