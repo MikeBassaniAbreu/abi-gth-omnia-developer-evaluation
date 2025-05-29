@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Ambev.DeveloperEvaluation.UnitTests.Application; // Adapte o namespace se necessário
+namespace Ambev.DeveloperEvaluation.UnitTests.Application; 
 
 public class CreateSaleCommandHandlerTests
 {
@@ -57,10 +57,10 @@ public class CreateSaleCommandHandlerTests
         }
         };
 
-        // Captura a instância de Sale que será passada para AddAsync para verificações detalhadas
+        
         Sale capturedSale = null;
         _mockSaleRepository.Setup(r => r.AddAsync(It.IsAny<Sale>(), It.IsAny<CancellationToken>()))
-                           .Callback<Sale, CancellationToken>((s, ct) => capturedSale = s) // Captura a Sale
+                           .Callback<Sale, CancellationToken>((s, ct) => capturedSale = s) 
                            .Returns(Task.CompletedTask);
 
         var cancellationToken = CancellationToken.None;

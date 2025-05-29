@@ -66,7 +66,7 @@ public class GetAllSalesQueryHandlerTests
     {
         // Arrange
         var salesFromRepo = new List<Sale>();
-        var mappedResults = new List<GetAllSalesQueryResult>(); // Mapper deve retornar lista vazia
+        var mappedResults = new List<GetAllSalesQueryResult>(); 
 
         _mockSaleRepository.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
                            .ReturnsAsync(salesFromRepo);

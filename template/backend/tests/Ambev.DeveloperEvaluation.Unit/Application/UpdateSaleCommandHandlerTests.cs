@@ -31,9 +31,9 @@ public class UpdateSaleCommandHandlerTests
     {
         // Arrange
         var saleId = Guid.NewGuid();
-        var productId = Guid.NewGuid(); // Necessário para criar o SaleItem
+        var productId = Guid.NewGuid(); 
 
-        // Crie uma venda existente com um item
+        
         var existingSale = new Sale(
             "VENDA-EXISTENTE",
             DateTime.Today.AddDays(-1),
@@ -44,15 +44,15 @@ public class UpdateSaleCommandHandlerTests
         );
         var existingItem = new SaleItem(productId, "Produto X", 1, 100.0m);
         existingSale.AddItem(existingItem);
-        existingSale.CalculateTotalAmount(); // TotalAmount é 100.0m aqui
+        existingSale.CalculateTotalAmount(); 
 
-        // Setup do repositório
+        
         _mockSaleRepository.Setup(r => r.GetByIdAsync(saleId, It.IsAny<CancellationToken>()))
                            .ReturnsAsync(existingSale);
         _mockSaleRepository.Setup(r => r.UpdateAsync(It.IsAny<Sale>(), It.IsAny<CancellationToken>()))
                            .Returns(Task.CompletedTask);
 
-        // Crie o comando de atualização com novos dados
+        
         var newCustomerId = Guid.NewGuid();
         var newCustomerName = "Cliente Novo";
         var newBranchId = Guid.NewGuid();
@@ -67,11 +67,11 @@ public class UpdateSaleCommandHandlerTests
             BranchId = newBranchId,
             BranchName = newBranchName,
             SaleDate = newSaleDate,
-            Items = new System.Collections.Generic.List<UpdateSaleCommandItem> // <-- ADICIONE ISSO
+            Items = new System.Collections.Generic.List<UpdateSaleCommandItem> 
         {
-            new UpdateSaleCommandItem // <-- Inclua o item existente no comando
+            new UpdateSaleCommandItem 
             {
-                Id = existingItem.Id, // IMPORTANTE: o Id do SaleItem existente
+                Id = existingItem.Id, 
                 ProductId = existingItem.ProductId,
                 ProductName = existingItem.ProductName,
                 Quantity = existingItem.Quantity,
@@ -94,8 +94,8 @@ public class UpdateSaleCommandHandlerTests
         Assert.Equal(newSaleDate, existingSale.SaleDate);
         Assert.Equal("VENDA-EXISTENTE", existingSale.SaleNumber);
 
-        // Agora, o TotalAmount deve permanecer 100.0m porque o item não foi removido
-        Assert.Equal(100.0m, existingSale.TotalAmount); // <-- Esta asserção agora deve passar
+        
+        Assert.Equal(100.0m, existingSale.TotalAmount); 
 
     }
 
@@ -104,13 +104,13 @@ public class UpdateSaleCommandHandlerTests
     {
         // Arrange
         var nonExistentSaleId = Guid.NewGuid();
-        // Setup do repositório para retornar null (venda não encontrada)
+        
         _mockSaleRepository.Setup(r => r.GetByIdAsync(nonExistentSaleId, It.IsAny<CancellationToken>()))
-                           .ReturnsAsync((Sale)null); // Retorna null para simular não encontrado
+                           .ReturnsAsync((Sale)null); 
 
         var command = new UpdateSaleCommand
         {
-            Id = nonExistentSaleId, // <-- CORRIGIDO AQUI
+            Id = nonExistentSaleId,
             CustomerId = Guid.NewGuid(),
             CustomerName = "Cliente Teste",
             BranchId = Guid.NewGuid(),
@@ -119,14 +119,13 @@ public class UpdateSaleCommandHandlerTests
         };
         var cancellationToken = CancellationToken.None;
 
-        // Act & Assert
-        // Espera-se uma NotFoundException
+        // Act & Assert       
         var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
             _handler.Handle(command, cancellationToken));
 
         Assert.Equal($"Sale with ID {nonExistentSaleId} not found.", exception.Message);
 
-        // Verifica que UpdateAsync nunca foi chamado, pois a venda não foi encontrada
+        
         _mockSaleRepository.Verify(r => r.UpdateAsync(It.IsAny<Sale>(), It.IsAny<CancellationToken>()), Times.Never());
 
     }
@@ -147,12 +146,12 @@ public class UpdateSaleCommandHandlerTests
         _mockSaleRepository.Setup(r => r.GetByIdAsync(saleId, It.IsAny<CancellationToken>()))
                            .ReturnsAsync(existingSale);
 
-        // Comando inválido (CustomerName vazio)
+       
         var command = new UpdateSaleCommand
         {
-            Id = saleId, // <-- CORRIGIDO AQUI
+            Id = saleId, 
             CustomerId = Guid.NewGuid(),
-            CustomerName = "", // Invalid data
+            CustomerName = "", 
             BranchId = Guid.NewGuid(),
             BranchName = "Filial Teste",
             SaleDate = DateTime.Today
@@ -165,7 +164,7 @@ public class UpdateSaleCommandHandlerTests
 
         Assert.Equal("Customer name cannot be null or empty.", exception.Message);
 
-        // Verifica que UpdateAsync nunca foi chamado, pois a validação impediu
+        
         _mockSaleRepository.Verify(r => r.UpdateAsync(It.IsAny<Sale>(), It.IsAny<CancellationToken>()), Times.Never());
     }
 
@@ -182,14 +181,14 @@ public class UpdateSaleCommandHandlerTests
             Guid.NewGuid(),
             "Filial Cancelada"
         );
-        cancelledSale.Cancel(); // Marca a venda como cancelada
+        cancelledSale.Cancel(); 
 
         _mockSaleRepository.Setup(r => r.GetByIdAsync(saleId, It.IsAny<CancellationToken>()))
                            .ReturnsAsync(cancelledSale);
 
         var command = new UpdateSaleCommand
         {
-            Id = saleId, // <-- CORRIGIDO AQUI
+            Id = saleId,
             CustomerId = Guid.NewGuid(),
             CustomerName = "Cliente Novo",
             BranchId = Guid.NewGuid(),

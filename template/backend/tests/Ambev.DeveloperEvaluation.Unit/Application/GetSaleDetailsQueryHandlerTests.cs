@@ -34,40 +34,30 @@ public class GetSaleDetailsQueryHandlerTests
         var branchId = Guid.NewGuid();
         var productId = Guid.NewGuid();
 
-        // Crie uma entidade Sale com um item para simular a venda do repositório
+        
         var saleFromRepo = new Sale("VENDA-001", DateTime.Today, customerId, "Cliente Teste", branchId, "Filial Teste");
 
-        // CORREÇÃO AQUI: Use o construtor completo do SaleItem
-        // Passe o saleId da venda que está sendo criada e um valor para desconto (pode ser 0m se não houver desconto para essa quantidade)
-        var itemQuantity = 5; // Exemplo de quantidade
-        var itemUnitPrice = 50.0m; // Exemplo de preço unitário
-        var itemDiscount = 0.0m; // Inicialize o desconto, ele será calculado internamente por ApplyDiscount() se a quantidade mudar
+        
+        var itemQuantity = 5; 
+        var itemUnitPrice = 50.0m; 
+        var itemDiscount = 0.0m;
 
-        // Se sua lógica de desconto automático é baseada na quantidade (como em ApplyDiscount),
-        // você pode calcular o desconto antes de passar para o construtor se quiser que o construtor
-        // use o desconto já calculado.
-        // Ou, se o construtor que aceita o desconto já calcula o TotalItemAmount internamente,
-        // apenas passe o desconto.
-        // Pela sua entidade, o construtor que recebe 'discount' já calcula: TotalItemAmount = (UnitPrice * Quantity) - Discount;
-        // Então vamos apenas passar um desconto para o construtor que simula um item já calculado.
 
-        // Vamos simular um item que se qualifica para desconto de 10% (4 a 9 itens)
         itemQuantity = 5;
         itemUnitPrice = 100.0m;
-        itemDiscount = itemUnitPrice * itemQuantity * 0.10m; // Exemplo de cálculo de 10% de desconto
+        itemDiscount = itemUnitPrice * itemQuantity * 0.10m;
 
         var saleItem = new SaleItem(
-            saleFromRepo.Id, // Use o SaleId da Sale que ele pertence
+            saleFromRepo.Id, 
             productId,
             "Produto A",
             itemQuantity,
             itemUnitPrice,
-            itemDiscount // Passe o valor do desconto
+            itemDiscount 
         );
-        saleFromRepo.AddItem(saleItem); // Adicione o item à venda
-        saleFromRepo.CalculateTotalAmount(); // Recalcule o total da venda após adicionar o item
-
-        // Crie o GetSaleDetailsQueryResult esperado com base na estrutura real do seu DTO
+        saleFromRepo.AddItem(saleItem); 
+        saleFromRepo.CalculateTotalAmount();
+        
         var mappedResult = new GetSaleDetailsQueryResult
         {
             Id = saleFromRepo.Id,
@@ -97,11 +87,11 @@ public class GetSaleDetailsQueryHandlerTests
             }
         };
 
-        // Configure o mock do repositório para retornar a venda
+       
         _mockSaleRepository.Setup(r => r.GetByIdAsync(saleId, It.IsAny<CancellationToken>()))
                            .ReturnsAsync(saleFromRepo);
 
-        // Configure o mock do AutoMapper para retornar o resultado mapeado esperado
+        
         _mockMapper.Setup(m => m.Map<GetSaleDetailsQueryResult>(It.IsAny<Sale>()))
                    .Returns(mappedResult);
 
@@ -126,7 +116,7 @@ public class GetSaleDetailsQueryHandlerTests
         Assert.Equal(mappedResult.UpdatedAt, result.UpdatedAt);
 
         Assert.NotNull(result.Items);
-        Assert.Single(result.Items); // Deve ter 1 item
+        Assert.Single(result.Items); 
         var actualItem = result.Items.First();
         var expectedItem = mappedResult.Items.First();
         Assert.Equal(expectedItem.Id, actualItem.Id);
@@ -139,7 +129,7 @@ public class GetSaleDetailsQueryHandlerTests
         Assert.Equal(expectedItem.IsCancelled, actualItem.IsCancelled);
 
 
-        // Verifique se os métodos do mock foram chamados corretamente
+        
         _mockSaleRepository.Verify(r => r.GetByIdAsync(saleId, cancellationToken), Times.Once);
         _mockMapper.Verify(m => m.Map<GetSaleDetailsQueryResult>(It.IsAny<Sale>()), Times.Once);
     }
@@ -150,13 +140,13 @@ public class GetSaleDetailsQueryHandlerTests
         // Arrange
         var nonExistentSaleId = Guid.NewGuid();
 
-        // Configure o mock do repositório para retornar null (venda não encontrada)
+        
         _mockSaleRepository.Setup(r => r.GetByIdAsync(nonExistentSaleId, It.IsAny<CancellationToken>()))
                            .ReturnsAsync((Sale)null);
 
-        // O Mapper NÃO deve ser chamado se a venda não for encontrada
+        
         _mockMapper.Setup(m => m.Map<GetSaleDetailsQueryResult>(It.IsAny<Sale>()))
-                   .Returns(new GetSaleDetailsQueryResult()); // Retorno dummy, mas não deve ser usado
+                   .Returns(new GetSaleDetailsQueryResult()); 
 
         var query = new GetSaleDetailsQuery(nonExistentSaleId);
         var cancellationToken = CancellationToken.None;
@@ -167,7 +157,7 @@ public class GetSaleDetailsQueryHandlerTests
         // Assert
         Assert.Null(result); // Esperamos null
 
-        // Verifique se o método do repositório foi chamado e o do mapper NÃO foi
+        
         _mockSaleRepository.Verify(r => r.GetByIdAsync(nonExistentSaleId, cancellationToken), Times.Once);
         _mockMapper.Verify(m => m.Map<GetSaleDetailsQueryResult>(It.IsAny<Sale>()), Times.Never);
     }
