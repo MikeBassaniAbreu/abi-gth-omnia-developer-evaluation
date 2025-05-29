@@ -1,3 +1,95 @@
+
+# Projeto Ambev Developer Evaluation - Sistema de Gestão de Vendas
+Este projeto é uma solução de API RESTful para gestão de vendas e seus itens, desenvolvida em .NET 8 com arquitetura Onion/Clean Architecture. Ela segue os princípios de CQRS (Comandos e Queries) com MediatR, utiliza Entity Framework Core para persistência em PostgreSQL, e possui testes unitários abrangentes.
+
+## Pré-requisitos
+
+Certifique-se de ter as seguintes ferramentas instaladas em sua máquina:
+
+* [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (ou a versão mais recente compatível)
+* [Docker Desktop](https://www.docker.com/products/docker-desktop/) (necessário para rodar os serviços de banco de dados e cache)
+* [Git](https://git-scm.com/downloads)
+
+## Configuração e Execução do Projeto
+
+Siga os passos abaixo para configurar, executar e testar o projeto em sua máquina local.
+
+### 1. Clonar o Repositório
+### 2. O Peojeto está completo na 👉 👉  DEVELOP, MUDE PARA ESSA BRANCH 👈👈
+
+### 3. Iniciar os Serviços de Banco de Dados e Cache com Docker Compose
+Neste projeto, utilizamos Docker Compose para orquestrar o banco de dados PostgreSQL e outros serviços.
+
+Importante: Embora os serviços de MongoDB e Redis estejam configurados no docker-compose.yml e serão iniciados, as funcionalidades principais de gestão de vendas da API utilizam o PostgreSQL como base de dados primária, conforme a DefaultConnection no appsettings.Development.json.
+
+No diretório raiz do projeto (onde está o docker-compose.yml), execute o seguinte comando:
+
+
+#### docker compose up -d
+
+Este comando irá:
+
+Construir a imagem da sua API (ambev.developerevaluation.webapi).
+Criar e iniciar os contêineres para:
+ambev.developerevaluation.webapi (sua API .NET)
+ambev.developerevaluation.database (PostgreSQL): Mapeia a porta 5432 do contêiner para a 5432 da sua máquina local. As credenciais são developer/ev@luAt10n e o DB é developer_evaluation.
+ambev.developerevaluation.nosql (MongoDB): Expõe a porta 27017 do contêiner para uma porta efêmera na sua máquina local.
+ambev.developerevaluation.cache (Redis): Expõe a porta 6379 do contêiner para uma porta efêmera na sua máquina local.
+Executar todos esses serviços em segundo plano (-d de "detached").
+
+### 4. Executar o Projeto da API (.NET) - Migrações Automáticas
+Com os serviços de backend rodando via Docker Compose (e o contêiner da sua API também já pode estar rodando se você usou docker compose up -d), você pode iniciar sua aplicação Web API do .NET. As migrações do Entity Framework Core serão aplicadas automaticamente durante o startup da aplicação ao se conectar ao PostgreSQL.
+
+# Testando o Projeto
+1. Acessar a Documentação da API (Swagger UI)
+Uma vez que a API esteja rodando, você pode acessar a documentação interativa via Swagger UI em seu navegador.
+Através do Swagger, você pode explorar todos os endpoints disponíveis, entender suas requisições/respostas e testá-los diretamente.
+
+## payload para teste:
+
+### Endpointe POST /api/Sales
+
+```json
+{
+  "saleNumber": "VENDA-001",
+  "saleDate": "2025-05-29T04:53:08.346Z",
+  "customerId": "00000000-0000-0000-0000-000000000001",
+  "customerName": "Cliente Teste 123",
+  "branchId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "branchName": "Filial Central Ambev",
+  "items": [
+    {
+      "productId": "00000000-0000-0000-0000-000000000002",
+      "productName": "Fanta",
+      "quantity": 4,
+      "unitPrice": 7.5
+    },
+    {
+      "productId": "00000000-0000-0000-0000-000000000003",
+      "productName": "Fanta uva",
+      "quantity": 5,
+      "unitPrice": 8
+    },
+    {
+      "productId": "00000000-0000-0000-0000-000000000004",
+      "productName": "Água Mineral 500ml",
+      "quantity": 5,
+      "unitPrice": 8
+    }
+  ]
+}
+```
+---
+## Observação para o Avaliador
+
+O escopo original para este projeto incluía a implementação de autenticação (Auth) e mecanismos de eventos. Devido à minha dedicação intensa ao core do projeto e ao desejo de entregar as funcionalidades principais de gestão de vendas em um tempo significativamente reduzido (concluído em 2 dias, em vez dos 7 dias previstos), priorizei a entrega robusta e testada das funcionalidades essenciais de vendas e seus itens.
+
+Portanto, a implementação da autenticação e de eventos não foi abordada nesta entrega, permitindo-me focar na qualidade e velocidade de desenvolvimento do domínio principal da avaliação.
+
+---
+
+# PEDIDO DO DESAFIO 👇👇👇👇
+
 # Developer Evaluation Project
 
 `READ CAREFULLY`
