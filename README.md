@@ -30,12 +30,7 @@ No diretório raiz do projeto (onde está o docker-compose.yml), execute o segui
 Este comando irá:
 
 Construir a imagem da sua API (ambev.developerevaluation.webapi).
-Criar e iniciar os contêineres para:
-ambev.developerevaluation.webapi (sua API .NET)
-ambev.developerevaluation.database (PostgreSQL): Mapeia a porta 5432 do contêiner para a 5432 da sua máquina local. As credenciais são developer/ev@luAt10n e o DB é developer_evaluation.
-ambev.developerevaluation.nosql (MongoDB): Expõe a porta 27017 do contêiner para uma porta efêmera na sua máquina local.
-ambev.developerevaluation.cache (Redis): Expõe a porta 6379 do contêiner para uma porta efêmera na sua máquina local.
-Executar todos esses serviços em segundo plano (-d de "detached").
+Criar e iniciar os contêineres
 
 ### 4. Executar o Projeto da API (.NET) - Migrações Automáticas
 Com os serviços de backend rodando via Docker Compose (e o contêiner da sua API também já pode estar rodando se você usou docker compose up -d), você pode iniciar sua aplicação Web API do .NET. As migrações do Entity Framework Core serão aplicadas automaticamente durante o startup da aplicação ao se conectar ao PostgreSQL.
