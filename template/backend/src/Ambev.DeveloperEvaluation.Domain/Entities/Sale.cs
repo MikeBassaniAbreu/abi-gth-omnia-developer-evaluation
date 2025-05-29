@@ -97,8 +97,7 @@ public class Sale : BaseEntity
 
     public void CalculateTotalAmount()
     {
-        TotalAmount = _items.Sum(item => item.TotalItemAmount);
-      
+        TotalAmount = _items.Where(item => !item.IsCancelled).Sum(item => item.TotalItemAmount);
         UpdateLastModified();
     }
 

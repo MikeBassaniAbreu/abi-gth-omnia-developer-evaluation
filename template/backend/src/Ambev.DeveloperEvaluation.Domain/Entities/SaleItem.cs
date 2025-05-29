@@ -64,7 +64,7 @@ public class SaleItem : BaseEntity
     private SaleItem() { }
 
     
-    internal void SetSaleId(Guid saleId)
+    public void SetSaleId(Guid saleId)
     {
         if (saleId == Guid.Empty)
             throw new DomainException("Sale ID cannot be empty when setting for item.");

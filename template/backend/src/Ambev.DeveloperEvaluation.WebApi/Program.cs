@@ -91,6 +91,25 @@ public class Program
             var app = builder.Build();
             app.UseMiddleware<ValidationExceptionMiddleware>();
 
+            //migrations
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    Log.Information("Attempting to apply pending database migrations...");
+                    var context = services.GetRequiredService<DefaultContext>();
+                    context.Database.Migrate();
+                    Log.Information("Database migrations applied successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Log.Fatal(ex, "An error occurred while applying database migrations. Application will terminate.");
+                    throw;
+                }
+            }
+
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

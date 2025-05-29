@@ -1,12 +1,13 @@
 ﻿using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Domain.Events;
+using Ambev.DeveloperEvaluation.Domain.Exceptions;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using MediatR;
+using Microsoft.Extensions.Logging; 
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging; 
-using Ambev.DeveloperEvaluation.Domain.Events; 
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 
@@ -28,7 +29,14 @@ public class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand, Unit>
 
         if (sale == null)
         {
-           throw new Domain.Exceptions.DomainException($"Sale with ID {request.Id} not found.");
+            _logger.LogWarning("Sale with ID {SaleId} not found for update.", request.Id);            
+            throw new NotFoundException($"Sale with ID {request.Id} not found.");
+        }
+
+        if (sale.IsCancelled)
+        {
+            _logger.LogWarning("Attempted to update cancelled sale {SaleId}.", request.Id);
+            throw new DomainException("Cannot update a cancelled sale.");
         }
 
         // Armazenar dados antigos para o evento de modificação

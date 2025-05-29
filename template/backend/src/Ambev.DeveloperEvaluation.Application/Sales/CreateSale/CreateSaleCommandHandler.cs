@@ -6,16 +6,19 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 
 public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Guid>
 {
     private readonly ISaleRepository _saleRepository;
+    private readonly ILogger<CreateSaleCommandHandler> _logger;
 
-    public CreateSaleCommandHandler(ISaleRepository saleRepository)
+    public CreateSaleCommandHandler(ISaleRepository saleRepository, ILogger<CreateSaleCommandHandler> logger)
     {
         _saleRepository = saleRepository;
+        _logger = logger;
     }
 
     public async Task<Guid> Handle(CreateSaleCommand request, CancellationToken cancellationToken)
